@@ -36,7 +36,7 @@ class MessageBus {
     }
   }
   static post(message) {
-    console.log("Message posted: ", message);
+    console.log("LOG: Message posted: ", message);
     let handlers = MessageBus._subscription[message.code];
     if (handlers === undefined) {
       return;
@@ -1446,6 +1446,15 @@ class InputManager {
     window.addEventListener("mousemove", InputManager.onMouseMove);
     window.addEventListener("mousedown", InputManager.onMouseDown);
     window.addEventListener("mouseup", InputManager.onMouseUp);
+    window.addEventListener("touchstart", InputManager.onTouchStart, {
+      passive: false
+    });
+    window.addEventListener("touchmove", InputManager.onTouchMove, {
+      passive: false
+    });
+    window.addEventListener("touchend", InputManager.onTouchEnd, {
+      passive: false
+    });
   }
   static isKeyDown(key) {
     return InputManager._keys[key];
@@ -1486,6 +1495,33 @@ class InputManager {
       this._rightDown = false;
     }
     Message2.send("MOUSE_UP", this, new MouseContext(InputManager._leftDown, InputManager._rightDown, InputManager.getMousePosition()));
+  }
+  static onTouchStart(event) {
+    const touch = event.touches[0];
+    InputManager._leftDown = true;
+    const rect = event.target.getBoundingClientRect();
+    InputManager._mouseX = (touch.clientX - Math.round(rect.left)) * (1 / InputManager._resolutionScale.x);
+    InputManager._mouseY = (touch.clientY - Math.round(rect.top)) * (1 / InputManager._resolutionScale.y);
+    Message2.send("MOUSE_DOWN", this, new MouseContext(true, false, InputManager.getMousePosition()));
+    event.preventDefault();
+  }
+  static onTouchMove(event) {
+    const touch = event.touches[0];
+    const rect = event.target.getBoundingClientRect();
+    InputManager._previousMouseX = InputManager._mouseX;
+    InputManager._previousMouseY = InputManager._mouseY;
+    InputManager._mouseX = (touch.clientX - Math.round(rect.left)) * (1 / InputManager._resolutionScale.x);
+    InputManager._mouseY = (touch.clientY - Math.round(rect.top)) * (1 / InputManager._resolutionScale.y);
+    event.preventDefault();
+  }
+  static onTouchEnd(event) {
+    InputManager._leftDown = false;
+    Message2.send("MOUSE_UP", this, new MouseContext(false, false, InputManager.getMousePosition()));
+    event.preventDefault();
+  }
+  static onTouchCancel(event) {
+    InputManager._leftDown = false;
+    event.preventDefault();
   }
 }
 
