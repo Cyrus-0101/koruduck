@@ -1455,6 +1455,9 @@ class InputManager {
     window.addEventListener("touchend", InputManager.onTouchEnd, {
       passive: false
     });
+    window.addEventListener("touchcancel", InputManager.onTouchCancel, {
+      passive: false
+    });
   }
   static isKeyDown(key) {
     return InputManager._keys[key];
